@@ -25,20 +25,34 @@
         "email": "hello@verygood.ventures"
       }
     },
-    {
-      "name": "vgv-wingspan",
-      "description": "VGV Wingspan - AI-native workflows following Very Good Ventures best practices.",
-      "version": "0.0.2",
-      "source": {
-        "source": "github",
-        "repo": "VeryGoodOpenSource/vgv-wingspan"
-      },
-      "repository": "https://github.com/VeryGoodOpenSource/vgv-wingspan",
-      "homepage": "https://github.com/VeryGoodOpenSource/vgv-wingspan",
-      "author": {
-        "name": "Very Good Ventures",
-        "email": "hello@verygood.ventures"
-      }
+  {
+    "name": "vgv-wingspan",
+    "description": "VGV Wingspan - AI-native workflows following Very Good Ventures best practices.",
+    "version": "0.0.2",
+    "source": {
+      "source": "github",
+      "repo": "VeryGoodOpenSource/vgv-wingspan"
+    },
+    "repository": "https://github.com/VeryGoodOpenSource/vgv-wingspan",
+    "homepage": "https://github.com/VeryGoodOpenSource/vgv-wingspan",
+    "author": {
+      "name": "Very Good Ventures",
+      "email": "hello@verygood.ventures"
     }
-  ]
+  },
+  {
+    "name": "x-twitter-scraper",
+    "description": "Xquik X/Twitter data skill with MCP setup, REST workflows, webhooks, monitors, and extraction guidance.",
+    "version": "2.4.16",
+    "source": {
+      "source": "github",
+      "repo": "Xquik-dev/x-twitter-scraper"
+    },
+    "repository": "https://github.com/Xquik-dev/x-twitter-scraper",
+    "homepage": "https://docs.xquik.com",
+    "author": {
+      "name": "Xquik"
+    }
+  }
+]
 }
