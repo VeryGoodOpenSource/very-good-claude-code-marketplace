@@ -12,7 +12,7 @@ Developed with 💙 by [Very Good Ventures][vgv_link] 🦄
 Inside Claude:
 
 ```bash
-/plugin marketplace add VeryGoodOpenSource/very_good_claude_marketplace
+/plugin marketplace add VeryGoodOpenSource/very-good-claude-code-marketplace
 /plugin install <very_good_plugin>
 ```
 
