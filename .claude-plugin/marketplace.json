@@ -7,13 +7,13 @@
   },
   "metadata": {
     "description": "Official VGV Claude Code marketplace",
-    "version": "1.0.2"
+    "version": "1.0.3"
   },
   "plugins": [
     {
       "name": "vgv-ai-flutter-plugin",
       "description": "Claude Code plugin to enhance and accelerate Flutter & Dart development, built by Very Good Ventures",
-      "version": "0.0.3",
+      "version": "0.0.4",
       "source": {
         "source": "github",
         "repo": "VeryGoodOpenSource/vgv-ai-flutter-plugin"
@@ -28,7 +28,7 @@
     {
       "name": "vgv-wingspan",
       "description": "VGV Wingspan - AI-native workflows following Very Good Ventures best practices.",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "source": {
         "source": "github",
         "repo": "VeryGoodOpenSource/vgv-wingspan"
