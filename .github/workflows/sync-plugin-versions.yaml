@@ -1,0 +1,125 @@
+name: Sync Plugin Versions
+
+# Daily "check-in" that keeps .claude-plugin/marketplace.json in sync with the
+# latest release of every plugin it lists.
+#
+# For each plugin the workflow reads the latest GitHub release of the repo in
+# `source.repo`. When that release differs from the version recorded in
+# marketplace.json it bumps the plugin `version`. If any plugin was bumped, the
+# marketplace `metadata.version` is given a patch bump as well.
+#
+# Metadata version policy: any run that bumps one or more plugin versions bumps
+# `metadata.version` by a single patch increment (x.y.z -> x.y.z+1). Marketplace
+# minor/major bumps are reserved for structural changes (adding/removing plugins,
+# schema changes) and stay manual.
+#
+# All changes land in a single, reused pull request against `main`, so a run
+# never opens a duplicate PR while one is already open.
+
+on:
+  schedule:
+    # 06:00 UTC every day.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync plugin versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for newer plugin releases
+        id: sync
+        env:
+          # Built-in token; reads the public plugin release APIs.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          marketplace=".claude-plugin/marketplace.json"
+          bumped=()
+
+          count=$(jq '.plugins | length' "$marketplace")
+          for i in $(seq 0 $((count - 1))); do
+            name=$(jq -r ".plugins[$i].name" "$marketplace")
+            repo=$(jq -r ".plugins[$i].source.repo" "$marketplace")
+            current=$(jq -r ".plugins[$i].version" "$marketplace")
+
+            # Latest published release, with any leading "v" stripped.
+            latest=$(gh api "repos/$repo/releases/latest" --jq '.tag_name' 2>/dev/null | sed 's/^v//') || latest=""
+            if [ -z "$latest" ]; then
+              echo "::warning::No latest release found for $repo, skipping $name"
+              continue
+            fi
+
+            if [ "$latest" = "$current" ]; then
+              echo "$name is up to date ($current)"
+              continue
+            fi
+
+            echo "Bumping $name: $current -> $latest"
+            jq --arg n "$name" --arg v "$latest" \
+              '(.plugins[] | select(.name == $n) | .version) = $v' \
+              "$marketplace" > "$marketplace.tmp"
+            mv "$marketplace.tmp" "$marketplace"
+            bumped+=("$name|$current|$latest")
+          done
+
+          if [ ${#bumped[@]} -eq 0 ]; then
+            echo "No plugin updates available."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Patch-bump the marketplace metadata version.
+          meta=$(jq -r '.metadata.version' "$marketplace")
+          IFS='.' read -r major minor patch <<< "$meta"
+          new_meta="$major.$minor.$((patch + 1))"
+          jq --arg v "$new_meta" '.metadata.version = $v' \
+            "$marketplace" > "$marketplace.tmp"
+          mv "$marketplace.tmp" "$marketplace"
+          echo "Bumping marketplace metadata: $meta -> $new_meta"
+
+          # Fail loudly if we somehow produced invalid JSON.
+          jq empty "$marketplace"
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "title=chore: bump marketplace plugin versions" >> "$GITHUB_OUTPUT"
+          {
+            echo "body<<PR_BODY_EOF"
+            echo "## What"
+            echo ""
+            echo "Automated sync of marketplace plugin versions to their latest releases."
+            echo ""
+            echo "## Changes"
+            echo ""
+            for entry in "${bumped[@]}"; do
+              IFS='|' read -r n c l <<< "$entry"
+              echo "- Bump \`$n\` from $c to $l"
+            done
+            echo "- Bump marketplace metadata version from $meta to $new_meta"
+            echo ""
+            echo "Opened automatically by the \`Sync Plugin Versions\` workflow."
+            echo "PR_BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # Uses the built-in token, so the `ci` and `test-plugin-install` checks
+      # won't auto-run on this PR; re-run them from the PR if needed.
+      - name: Create or update pull request
+        if: steps.sync.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          base: main
+          branch: chore/sync-plugin-versions
+          delete-branch: true
+          commit-message: ${{ steps.sync.outputs.title }}
+          title: ${{ steps.sync.outputs.title }}
+          body: ${{ steps.sync.outputs.body }}
+          labels: |
+            ci
+            chore

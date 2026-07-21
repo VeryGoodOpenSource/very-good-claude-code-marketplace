@@ -35,6 +35,25 @@ Add a row to the **Plugins** table in `README.md` with:
 - A link to the plugin's GitHub repository (matching the `repository` field in your marketplace entry)
 - An accurate description of the plugin
 
+## Keeping Plugin Versions in Sync
+
+Plugin versions in `marketplace.json` are kept up to date automatically. The
+[`Sync Plugin Versions`](.github/workflows/sync-plugin-versions.yaml) workflow
+runs once a day (and can be triggered manually), reads the latest GitHub release
+of every plugin's repository, and opens a single pull request against `main`
+whenever a newer release is available. You do not need to bump plugin versions by
+hand.
+
+**Metadata version policy:** any sync that bumps one or more plugin versions also
+bumps the marketplace `metadata.version` by one patch (`x.y.z` to `x.y.z+1`).
+Minor and major bumps of `metadata.version` are manual and reserved for
+structural changes, such as adding or removing a plugin or changing the
+marketplace schema.
+
+The `README.md` table does not reference plugin versions, so the sync only
+touches `marketplace.json`. Adding or removing a plugin is still manual and must
+update both files as described above.
+
 ## Opening a Pull Request
 
 1. Fork the repository.
