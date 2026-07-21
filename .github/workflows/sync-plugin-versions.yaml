@@ -33,8 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check for newer plugin releases
-        id: sync
+      - name: Detect and apply plugin version bumps
+        id: detect
         env:
           # Built-in token; reads the public plugin release APIs.
           GH_TOKEN: ${{ github.token }}
@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
 
           marketplace=".claude-plugin/marketplace.json"
-          bumped=()
+          changes=""
 
           count=$(jq '.plugins | length' "$marketplace")
           for i in $(seq 0 $((count - 1))); do
@@ -67,59 +67,68 @@ jobs:
               '(.plugins[] | select(.name == $n) | .version) = $v' \
               "$marketplace" > "$marketplace.tmp"
             mv "$marketplace.tmp" "$marketplace"
-            bumped+=("$name|$current|$latest")
+            changes="${changes}- Bump \`$name\` from $current to $latest"$'\n'
           done
 
-          if [ ${#bumped[@]} -eq 0 ]; then
+          if [ -z "$changes" ]; then
             echo "No plugin updates available."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Patch-bump the marketplace metadata version.
-          meta=$(jq -r '.metadata.version' "$marketplace")
-          IFS='.' read -r major minor patch <<< "$meta"
-          new_meta="$major.$minor.$((patch + 1))"
-          jq --arg v "$new_meta" '.metadata.version = $v' \
+          # Expose the markdown change list (trailing newline trimmed) for the PR body.
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "changes<<CHANGES_EOF"
+            echo "${changes%$'\n'}"
+            echo "CHANGES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Bump marketplace metadata version
+        id: meta
+        if: steps.detect.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+
+          marketplace=".claude-plugin/marketplace.json"
+
+          old=$(jq -r '.metadata.version' "$marketplace")
+          IFS='.' read -r major minor patch <<< "$old"
+          new="$major.$minor.$((patch + 1))"
+
+          jq --arg v "$new" '.metadata.version = $v' \
             "$marketplace" > "$marketplace.tmp"
           mv "$marketplace.tmp" "$marketplace"
-          echo "Bumping marketplace metadata: $meta -> $new_meta"
+          echo "Bumping marketplace metadata: $old -> $new"
 
           # Fail loudly if we somehow produced invalid JSON.
           jq empty "$marketplace"
 
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-          echo "title=chore: bump marketplace plugin versions" >> "$GITHUB_OUTPUT"
-          {
-            echo "body<<PR_BODY_EOF"
-            echo "## What"
-            echo ""
-            echo "Automated sync of marketplace plugin versions to their latest releases."
-            echo ""
-            echo "## Changes"
-            echo ""
-            for entry in "${bumped[@]}"; do
-              IFS='|' read -r n c l <<< "$entry"
-              echo "- Bump \`$n\` from $c to $l"
-            done
-            echo "- Bump marketplace metadata version from $meta to $new_meta"
-            echo ""
-            echo "Opened automatically by the \`Sync Plugin Versions\` workflow."
-            echo "PR_BODY_EOF"
-          } >> "$GITHUB_OUTPUT"
+          echo "old=$old" >> "$GITHUB_OUTPUT"
+          echo "new=$new" >> "$GITHUB_OUTPUT"
 
       # Uses the built-in token, so the `ci` and `test-plugin-install` checks
       # won't auto-run on this PR; re-run them from the PR if needed.
       - name: Create or update pull request
-        if: steps.sync.outputs.changed == 'true'
+        if: steps.detect.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           base: main
           branch: chore/sync-plugin-versions
           delete-branch: true
-          commit-message: ${{ steps.sync.outputs.title }}
-          title: ${{ steps.sync.outputs.title }}
-          body: ${{ steps.sync.outputs.body }}
+          commit-message: "chore: bump marketplace plugin versions"
+          title: "chore: bump marketplace plugin versions"
+          body: |
+            ## What
+
+            Automated sync of marketplace plugin versions to their latest releases.
+
+            ## Changes
+
+            ${{ steps.detect.outputs.changes }}
+            - Bump marketplace metadata version from ${{ steps.meta.outputs.old }} to ${{ steps.meta.outputs.new }}
+
+            Opened automatically by the `Sync Plugin Versions` workflow.
           labels: |
             ci
             chore
