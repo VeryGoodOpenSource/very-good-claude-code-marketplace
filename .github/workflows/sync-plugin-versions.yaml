@@ -1,0 +1,67 @@
+name: Sync Plugin Versions
+
+# Daily "check-in" that keeps .claude-plugin/marketplace.json in sync with the
+# latest release of every plugin it lists.
+#
+# For each plugin the workflow reads the latest GitHub release of the repo in
+# `source.repo`. When that release differs from the version recorded in
+# marketplace.json it bumps the plugin `version`. If any plugin was bumped, the
+# marketplace `metadata.version` is given a patch bump as well.
+#
+# Metadata version policy: any run that bumps one or more plugin versions bumps
+# `metadata.version` by a single patch increment (x.y.z -> x.y.z+1). Marketplace
+# minor/major bumps are reserved for structural changes (adding/removing plugins,
+# schema changes) and stay manual.
+#
+# All changes land in a single, reused pull request against `main`, so a run
+# never opens a duplicate PR while one is already open.
+
+on:
+  schedule:
+    # 06:00 UTC every day.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync plugin versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync plugin versions
+        id: sync
+        env:
+          # Built-in token; reads the public plugin release APIs.
+          GH_TOKEN: ${{ github.token }}
+        run: ./.github/scripts/sync-plugin-versions.sh
+
+      # Uses the built-in token, so the `ci` and `test-plugin-install` checks
+      # won't auto-run on this PR; re-run them from the PR if needed.
+      - name: Create or update pull request
+        if: steps.sync.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          base: main
+          branch: chore/sync-plugin-versions
+          delete-branch: true
+          commit-message: "chore: bump marketplace plugin versions"
+          title: "chore: bump marketplace plugin versions"
+          body: |
+            ## What
+
+            Automated sync of marketplace plugin versions to their latest releases.
+
+            ## Changes
+
+            ${{ steps.sync.outputs.changes }}
+            - Bump marketplace metadata version from ${{ steps.sync.outputs.meta_old }} to ${{ steps.sync.outputs.meta_new }}
+
+            Opened automatically by the `Sync Plugin Versions` workflow.
+          labels: |
+            ci
+            chore
