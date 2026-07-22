@@ -21,6 +21,9 @@ on:
     # 06:00 UTC every day.
     - cron: "0 6 * * *"
   workflow_dispatch:
+  # TEMP: dry-run in CI on this PR. Remove before merge.
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
@@ -110,7 +113,8 @@ jobs:
       # Uses the built-in token, so the `ci` and `test-plugin-install` checks
       # won't auto-run on this PR; re-run them from the PR if needed.
       - name: Create or update pull request
-        if: steps.detect.outputs.changed == 'true'
+        # `pull_request` guard is TEMP for the CI dry-run. Remove before merge.
+        if: steps.detect.outputs.changed == 'true' && github.event_name != 'pull_request'
         uses: peter-evans/create-pull-request@v7
         with:
           base: main
