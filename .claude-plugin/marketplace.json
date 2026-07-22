@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Official VGV Claude Code marketplace",
-    "version": "1.0.4"
+    "version": "1.0.5"
   },
   "plugins": [
     {
@@ -28,7 +28,7 @@
     {
       "name": "vgv-wingspan",
       "description": "VGV Wingspan - AI-native workflows following Very Good Ventures best practices.",
-      "version": "0.0.4",
+      "version": "0.0.5",
       "source": {
         "source": "github",
         "repo": "VeryGoodOpenSource/vgv-wingspan"
