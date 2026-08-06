@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Official VGV Claude Code marketplace",
-    "version": "1.0.5"
+    "version": "1.1.0"
   },
   "plugins": [
     {
@@ -35,6 +35,21 @@
       },
       "repository": "https://github.com/VeryGoodOpenSource/vgv-wingspan",
       "homepage": "https://github.com/VeryGoodOpenSource/vgv-wingspan",
+      "author": {
+        "name": "Very Good Ventures",
+        "email": "hello@verygood.ventures"
+      }
+    },
+    {
+      "name": "vgv-ffca-plugin",
+      "description": "Feature-First Clean Architecture (FFCA) for Flutter monorepos. Skills, validation hooks, and conventions for AI-first development, by Very Good Ventures.",
+      "version": "0.1.0",
+      "source": {
+        "source": "github",
+        "repo": "VeryGoodOpenSource/vgv-ffca-plugin"
+      },
+      "repository": "https://github.com/VeryGoodOpenSource/vgv-ffca-plugin",
+      "homepage": "https://github.com/VeryGoodOpenSource/vgv-ffca-plugin",
       "author": {
         "name": "Very Good Ventures",
         "email": "hello@verygood.ventures"
