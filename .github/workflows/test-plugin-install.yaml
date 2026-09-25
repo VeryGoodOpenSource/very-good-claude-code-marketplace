@@ -29,3 +29,6 @@ jobs:
 
       - name: Install vgv-wingspan
         run: claude plugin install vgv-wingspan@very-good-claude-code-marketplace --scope user
+
+      - name: Install vgv-ffca-plugin
+        run: claude plugin install vgv-ffca-plugin@very-good-claude-code-marketplace --scope user
