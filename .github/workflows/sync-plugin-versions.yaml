@@ -31,7 +31,7 @@ jobs:
     name: Sync plugin versions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Sync plugin versions
         id: sync
@@ -44,7 +44,7 @@ jobs:
       # won't auto-run on this PR; re-run them from the PR if needed.
       - name: Create or update pull request
         if: steps.sync.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8.1.1
         with:
           base: main
           branch: chore/sync-plugin-versions
