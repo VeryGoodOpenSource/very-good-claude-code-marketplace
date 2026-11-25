@@ -15,8 +15,9 @@
       "description": "Claude Code plugin to enhance and accelerate Flutter & Dart development, built by Very Good Ventures",
       "version": "0.1.1",
       "source": {
-        "source": "github",
-        "repo": "VeryGoodOpenSource/vgv-ai-flutter-plugin"
+        "source": "git-subdir",
+        "url": "https://github.com/VeryGoodOpenSource/vgv-ai-flutter-plugin.git",
+        "path": "plugin"
       },
       "repository": "https://github.com/VeryGoodOpenSource/vgv-ai-flutter-plugin",
       "homepage": "https://github.com/VeryGoodOpenSource/vgv-ai-flutter-plugin",
@@ -30,8 +31,9 @@
       "description": "VGV Wingspan - AI-native workflows following Very Good Ventures best practices.",
       "version": "0.0.5",
       "source": {
-        "source": "github",
-        "repo": "VeryGoodOpenSource/vgv-wingspan"
+        "source": "git-subdir",
+        "url": "https://github.com/VeryGoodOpenSource/vgv-wingspan.git",
+        "path": "plugin"
       },
       "repository": "https://github.com/VeryGoodOpenSource/vgv-wingspan",
       "homepage": "https://github.com/VeryGoodOpenSource/vgv-wingspan",

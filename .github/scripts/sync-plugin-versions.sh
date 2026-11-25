@@ -23,7 +23,14 @@ changes=""
 count=$(jq '.plugins | length' "$marketplace")
 for ((i = 0; i < count; i++)); do
   name=$(jq -r ".plugins[$i].name" "$marketplace")
-  repo=$(jq -r ".plugins[$i].source.repo" "$marketplace")
+  # Releases live on the plugin's own GitHub repo. A "github" source names it
+  # as owner/repo; a "git-subdir" source only carries a clone URL.
+  repo=$(jq -r ".plugins[$i].source.repo // .plugins[$i].source.url // empty" "$marketplace" \
+    | sed -E 's#^(https://github\.com/|git@github\.com:)##; s#\.git$##')
+  if ! [[ "$repo" =~ ^[^/]+/[^/]+$ ]]; then
+    echo "::error::Cannot determine a GitHub owner/repo for $name (got '$repo')"
+    exit 1
+  fi
   current=$(jq -r ".plugins[$i].version" "$marketplace")
 
   # Latest published release, with any leading "v" stripped.
